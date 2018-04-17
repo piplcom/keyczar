@@ -18,10 +18,13 @@ A Writer supports writing metadata and key info for key sets.
 
 @author: rleftwich@lightkeeper.com (Robert Leftwich)
 """
+from builtins import str
+from builtins import object
 import os
 
 from . import errors
 from . import util
+from future.utils import with_metaclass
 
 def CreateWriter(location):
   """Factory function for Writers
@@ -38,10 +41,8 @@ def CreateWriter(location):
   raise errors.KeyczarError(
     "Unable to create a writer for %s. Does the location exist?" % location)
 
-class Writer(object):
+class Writer(with_metaclass(util.ABCMeta, object)):
   """Abstract class/interface providing supported methods for writing key sets."""
-
-  __metaclass__ = util.ABCMeta
 
   @util.abstractmethod
   def WriteMetadata(self, metadata, overwrite=True):

@@ -19,6 +19,8 @@ A Reader supports reading metadata and key info for key sets.
 @author: arkajit.dey@gmail.com (Arkajit Dey)
 """
 
+from builtins import str
+from builtins import object
 import os                
 
 from . import errors
@@ -26,6 +28,7 @@ from . import keydata
 from . import keyinfo
 from . import keys
 from . import util
+from future.utils import with_metaclass
 
 def CreateReader(location):
   """Factory function for Reader's
@@ -43,10 +46,8 @@ def CreateReader(location):
   raise errors.KeyczarError(
     "Unable to create a reader for %s. Does the location exist?" % location)
 
-class Reader(object):
+class Reader(with_metaclass(util.ABCMeta, object)):
   """Interface providing supported methods (no implementation)."""
-
-  __metaclass__ = util.ABCMeta
 
   @util.abstractmethod
   def GetMetadata(self):

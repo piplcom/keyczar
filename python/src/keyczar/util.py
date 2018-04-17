@@ -18,9 +18,16 @@ Utility functions for keyczar package.
 
 @author: arkajit.dey@gmail.com (Arkajit Dey)
 """
+from __future__ import division
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import chr
+from builtins import range
+from past.utils import old_div
 import base64
-import cPickle
+import pickle
 import codecs
 import functools
 import math
@@ -45,7 +52,7 @@ except ImportError:
 
     def __init__(self, errno, strerror, characters_written=0):
       super(IOError, self).__init__(errno, strerror)
-      if not isinstance(characters_written, (int, long)):
+      if not isinstance(characters_written, int):
         raise TypeError("characters_written must be a integer")
       self.characters_written = characters_written
 
@@ -135,12 +142,12 @@ def ParsePkcs8(pkcs8):
     if version != 0:
       raise errors.KeyczarError("Unrecognized RSA Private Key Version")
     for i in range(len(RSA_PARAMS)):
-      params[RSA_PARAMS[i]] = long(key[i+1])
+      params[RSA_PARAMS[i]] = int(key[i+1])
   elif oid == DSA_OID:
     alg_params = ParseASN1Sequence(alg_params)
     for i in range(len(DSA_PARAMS)):
-      params[DSA_PARAMS[i]] = long(alg_params[i])
-    params['x'] = long(key)
+      params[DSA_PARAMS[i]] = int(alg_params[i])
+    params['x'] = int(key)
   else:
     raise errors.KeyczarError("Unrecognized AlgorithmIdentifier: not RSA/DSA")
   return params
@@ -178,12 +185,12 @@ def ParseX509(x509):
   # then convert to OCTET STRING which can be ASN.1 decoded
   params = {}
   if oid == RSA_OID:
-    [params['n'], params['e']] = [long(x) for x in ParseASN1Sequence(pubkey)]
+    [params['n'], params['e']] = [int(x) for x in ParseASN1Sequence(pubkey)]
   elif oid == DSA_OID:
-    vals = [long(x) for x in ParseASN1Sequence(alg_params)]
+    vals = [int(x) for x in ParseASN1Sequence(alg_params)]
     for i in range(len(DSA_PARAMS)):
       params[DSA_PARAMS[i]] = vals[i]
-    params['y'] = long(pubkey)
+    params['y'] = int(pubkey)
   else:
     raise errors.KeyczarError("Unrecognized AlgorithmIdentifier: not RSA/DSA")
   return params
@@ -237,8 +244,8 @@ def ParseDsaSig(sig):
   seq = decoder.decode(sig)[0]
   if len(seq) != 2:
     raise errors.KeyczarError("Illegal DSA signature.")
-  r = long(seq.getComponentByPosition(0))
-  s = long(seq.getComponentByPosition(1))
+  r = int(seq.getComponentByPosition(0))
+  s = int(seq.getComponentByPosition(1))
   return (r, s)
 
 def MakeEmsaMessage(msg, modulus_size):
@@ -246,13 +253,13 @@ def MakeEmsaMessage(msg, modulus_size):
   magic_sha1_header = [0x30, 0x21, 0x30, 0x9, 0x6, 0x5, 0x2b, 0xe, 0x3, 0x2,
                        0x1a, 0x5, 0x0, 0x4, 0x14]
   encoded = "".join([chr(c) for c in magic_sha1_header]) + Hash(msg)
-  pad_string = chr(0xFF) * (modulus_size / 8 - len(encoded) - 3)
+  pad_string = chr(0xFF) * (old_div(modulus_size, 8) - len(encoded) - 3)
   return chr(1) + pad_string + chr(0) + encoded
 
 def BinToBytes(bits):
   """Convert bit string to byte string."""
   bits = _PadByte(bits)
-  octets = [bits[8 * i:8 * (i + 1)] for i in range(len(bits) / 8)]
+  octets = [bits[8 * i:8 * (i + 1)] for i in range(old_div(len(bits), 8))]
   return "".join([chr(int(x, 2)) for x in octets])
 
 def BytesToBin(byte_string):
@@ -268,9 +275,9 @@ def IntToBin(n):
   if n == 0 or n == 1:
     return str(n)
   elif n % 2 == 0:
-    return IntToBin(n / 2) + "0"
+    return IntToBin(old_div(n, 2)) + "0"
   else:
-    return IntToBin(n / 2) + "1"
+    return IntToBin(old_div(n, 2)) + "1"
 
 def BigIntToBytes(n):
   """Return a big-endian byte string representation of an arbitrary length n."""
@@ -288,7 +295,7 @@ def IntToBytes(n):
 
 def BytesToLong(byte_string):
   l = len(byte_string)
-  return long(sum([ord(byte_string[i]) * 256**(l - 1 - i) for i in range(l)]))
+  return int(sum([ord(byte_string[i]) * 256**(l - 1 - i) for i in range(l)]))
 
 def Xor(a, b):
   """Return a ^ b as a byte string where a and b are byte strings."""
@@ -497,7 +504,7 @@ def MGF(seed, mlen):
   if mlen > 2**32 * HLEN:
     raise errors.KeyczarError("MGF1 mask length too long.")
   output = ""
-  for i in range(int(math.ceil(mlen / float(HLEN)))):
+  for i in range(int(math.ceil(old_div(mlen, float(HLEN))))):
     output += Hash(seed, IntToBytes(i))
   return output[:mlen]
 
@@ -531,7 +538,7 @@ class BufferedIncrementalBase64WSEncoder(codecs.BufferedIncrementalEncoder):
     # and return an (output, length consumed) tuple
     if not final:
       # only output exact multiples of 3-bytes => no padding
-      len_to_write = 3 * (len(input) / 3)
+      len_to_write = 3 * (old_div(len(input), 3))
     else:
       len_to_write = len(input)
     return (Base64WSEncode(input[:len_to_write]), len_to_write)
@@ -658,7 +665,7 @@ class BufferedIncrementalBase64WSDecoder(codecs.BufferedIncrementalDecoder):
     """
     if not final:
       # only output exact multiples of 4-bytes => no padding
-      len_to_read = 4 * (len(input) / 4)
+      len_to_read = 4 * (old_div(len(input), 4))
     else:
       len_to_read = len(input)
     return (Base64WSDecode(input[:len_to_read]), len_to_read)
@@ -796,7 +803,7 @@ class IncrementalBase64WSStreamReader(codecs.StreamReader, object):
         data = self.bytebuffer + newdata
         try:
           newchars, decodedbytes = self.decode(data, self.errors)
-        except UnicodeDecodeError, exc:
+        except UnicodeDecodeError as exc:
           if firstline:
             newchars, decodedbytes = self.decode(data[:exc.start], self.errors)
             lines = newchars.splitlines(True)

@@ -20,6 +20,8 @@ Encodes the two classes storing data about keys:
 
 @author: arkajit.dey@gmail.com (Arkajit Dey)
 """
+from builtins import str
+from builtins import object
 try:
   import simplejson as json
 except ImportError:
@@ -38,7 +40,7 @@ class KeyMetadata(object):
     self.encrypted = encrypted
     self.__versions = {}  # dictionary from version nums to KeyVersions
 
-  versions = property(lambda self: self.__versions.values())
+  versions = property(lambda self: list(self.__versions.values()))
 
   def __str__(self):
     return json.dumps({"name": self.name,

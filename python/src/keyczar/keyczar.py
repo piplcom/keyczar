@@ -19,7 +19,9 @@ encrypt, decrypt, sign and verify.
 
 @author: arkajit.dey@gmail.com (Arkajit Dey)
 """
-
+from builtins import str
+from past.builtins import basestring
+from builtins import object
 import os
 import warnings
 
@@ -31,16 +33,15 @@ from . import keys
 from . import readers
 from . import writers
 from . import util
+from future.utils import with_metaclass
 
 VERSION = 0
 VERSION_BYTE = '\x00'
 KEY_HASH_SIZE = 4
 HEADER_SIZE = 1 + KEY_HASH_SIZE
 
-class Keyczar(object):
+class Keyczar(with_metaclass(util.ABCMeta, object)):
   """Abstract Keyczar base class."""
-
-  __metaclass__ = util.ABCMeta
 
   def __init__(self, reader):
     self.metadata = keydata.KeyMetadata.Read(reader.GetMetadata())
@@ -67,7 +68,7 @@ class Keyczar(object):
       self._keys[version] = key
       self._keys[key.hash_id] = key
 
-  versions = property(lambda self: [k for k in self._keys.keys()
+  versions = property(lambda self: [k for k in list(self._keys.keys())
                                     if isinstance(k, keydata.KeyVersion)],
                       doc="""List of versions in key set.""")
   primary_key = property(lambda self: self.GetKey(self.primary_version),

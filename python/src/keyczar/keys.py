@@ -20,7 +20,13 @@ of base class Key.
 
 @author: arkajit.dey@gmail.com (Arkajit Dey)
 """
+from __future__ import division
 
+from builtins import zip
+from builtins import chr
+from builtins import str
+from past.utils import old_div
+from builtins import object
 import hmac
 import math
 import random
@@ -259,15 +265,15 @@ class AesKey(SymmetricKey):
       @return: EVP.Cipher
       """
       assert selector in self.OP_TYPES, 'Invalid selector :%s' %selector
-      if selector == self.OP_ACTIVE and (len(self.ciphers.keys()) > 1 or 
-                                         not len(self.ciphers.keys())):
+      if selector == self.OP_ACTIVE and (len(list(self.ciphers.keys())) > 1 or 
+                                         not len(list(self.ciphers.keys()))):
         assert 0, 'If both encryption and decryption used then selector must \
             be OP_ENCRYPT or OP_DECRYPT and at least 1 must be active'
 
       cipher = None
       if selector == self.OP_ACTIVE:
         # should only be one cipher active
-        cipher = self.ciphers.values()[0]
+        cipher = list(self.ciphers.values())[0]
       else:
         cipher = self.ciphers.get(selector)
         # have we been created a cipher for this selector yet?
@@ -354,7 +360,7 @@ class AesKey(SymmetricKey):
     @return: an AES key
     @rtype: L{AesKey}
     """
-    key_bytes = util.RandBytes(size / 8)
+    key_bytes = util.RandBytes(old_div(size, 8))
     key_string = util.Base64WSEncode(key_bytes)
     hmac_key = HmacKey.Generate()  # use default HMAC-SHA1 key size
     return AesKey(key_string, hmac_key, size)
@@ -419,7 +425,7 @@ class AesKey(SymmetricKey):
     @return: best buffer size
     @rtype: int
     """
-    no_pad_size = self.block_size * (buffer_size / self.block_size)
+    no_pad_size = self.block_size * (old_div(buffer_size, self.block_size))
     return max(no_pad_size, self.block_size)
 
   def Encrypt(self, data):
@@ -521,7 +527,7 @@ class HmacKey(SymmetricKey):
     @return: an HMAC-SHA1 key
     @rtype: L{HmacKey}
     """
-    key_bytes = util.RandBytes(size / 8)
+    key_bytes = util.RandBytes(old_div(size, 8))
     key_string = util.Base64WSEncode(key_bytes)
     return HmacKey(key_string, size)
 
@@ -850,7 +856,7 @@ class RsaPrivateKey(PrivateKey):
     """
     emsa_encoded = util.MakeEmsaMessage(msg, self.size)
     byte_string = util.BigIntToBytes(self.key.sign(emsa_encoded, None)[0])
-    return util.PadBytes(byte_string, self.size/8 - len(byte_string))
+    return util.PadBytes(byte_string, old_div(self.size,8) - len(byte_string))
 
   def Verify(self, msg, sig):
     """@see: L{RsaPublicKey.Verify}"""

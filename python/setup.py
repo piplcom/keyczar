@@ -41,7 +41,7 @@ setup(name='python-keyczar',
       maintainer_email='keyczar-discuss@googlegroups.com',
       license='http://www.apache.org/licenses/LICENSE-2.0',
       platforms=['any'],
-      classifiers=filter(None, classifiers.split("\n")),
+      classifiers=[_f for _f in classifiers.split("\n") if _f],
       long_description=doclines[0],
 
       # create an executable for the KeyCzar tool
