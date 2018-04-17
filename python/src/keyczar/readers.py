@@ -21,11 +21,11 @@ A Reader supports reading metadata and key info for key sets.
 
 import os                
 
-import errors
-import keydata
-import keyinfo
-import keys
-import util
+from . import errors
+from . import keydata
+from . import keyinfo
+from . import keys
+from . import util
 
 def CreateReader(location):
   """Factory function for Reader's

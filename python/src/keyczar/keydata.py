@@ -25,8 +25,8 @@ try:
 except ImportError:
   import json
 
-import errors
-import keyinfo
+from . import errors
+from . import keyinfo
 
 class KeyMetadata(object):
   """Encodes metadata for a keyset with a name, purpose, type, and versions."""

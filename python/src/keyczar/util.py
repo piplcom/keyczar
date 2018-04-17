@@ -53,7 +53,7 @@ from pyasn1.codec.der import decoder
 from pyasn1.codec.der import encoder
 from pyasn1.type import univ
 
-import errors
+from . import errors
 
 try:
   from abc import ABCMeta, abstractmethod, abstractproperty
