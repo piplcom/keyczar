@@ -331,7 +331,7 @@ def Hash(*inputs):
   """Return a SHA-1 hash over a variable number of inputs."""
   md = sha1()
   for i in inputs:
-    md.update(i)
+    md.update(i.encode("ascii"))
   return md.digest()
 
 def PrefixHash(*inputs):
